@@ -22,22 +22,27 @@ sub parse_from_file {
     };
 
     my $cache_dir = _cache_dir($ENV{POD_PERLDOC_CACHE_DIR});
-    my $digest = _pod_md5($file);
-    my $cache_file = $file;
-    $cache_file =~ s!/!_!g;
-    my $abs_cache_path = catfile($cache_dir, $cache_file) . ".$digest";
+    my $cache_file = _cache_file($cache_dir, $file);
 
-    if (-f $abs_cache_path && not $self->{_ignore_cache}) {
-        open my $cache_fh, '<', $abs_cache_path
-            or die "Can't open $abs_cache_path: $!";
+    if (-f $cache_file && not $self->{_ignore_cache}) {
+        open my $cache_fh, '<', $cache_file
+            or die "Can't open $cache_file: $!";
         print $out_fh $_ while <$cache_fh>;
     } else {
         $parser->parse_from_file($file, $out_fh);
-        open my $cache_fh, '>', $abs_cache_path
-            or die "Can't write formatted pod to $abs_cache_path\n";
+        open my $cache_fh, '>', $cache_file
+            or die "Can't write formatted pod to $cache_file\n";
         seek $out_fh, 0, 0;
         print $cache_fh $_ while <$out_fh>;
     }
+}
+
+sub _cache_file {
+    my ($cache_dir, $file) = @_;
+    my $digest = _pod_md5($file);
+    my $cache_file = $file;
+    $cache_file =~ s!/!_!g;
+    return catfile($cache_dir, $cache_file) . ".$digest";
 }
 
 sub _cache_dir {
@@ -61,7 +66,7 @@ sub _pod_md5 {
             or die "Can't read pod file: $!";
         <$pod_fh>;
     };
-    md5_hex($pod);
+    return md5_hex($pod);
 }
 
 # called by -w option
