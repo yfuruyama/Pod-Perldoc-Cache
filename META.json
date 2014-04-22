@@ -54,5 +54,16 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/addsict/Pod-Perldoc-Cache/issues"
+      },
+      "homepage" : "https://github.com/addsict/Pod-Perldoc-Cache",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/addsict/Pod-Perldoc-Cache.git",
+         "web" : "https://github.com/addsict/Pod-Perldoc-Cache"
+      }
+   },
    "version" : "0.01"
 }
