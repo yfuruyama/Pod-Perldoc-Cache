@@ -3,6 +3,7 @@ use 5.008005;
 use strict;
 use warnings;
 use File::Spec::Functions qw(catfile catdir);
+use File::Path qw(mkpath);
 use Digest::MD5 qw(md5_hex);
 use Pod::Text ();
 
@@ -20,28 +21,36 @@ sub parse_from_file {
         }
     };
 
-    # use $HOME/.pod_perldoc_cache/ as cache directory
-    my $cached = catdir($ENV{HOME}, '.pod_perldoc_cache');
-    unless (-e $cached) {
-        mkdir $cached;
-    }
-
+    my $cache_dir = _cache_dir($ENV{POD_PERLDOC_CACHE_DIR});
     my $digest = _pod_md5($file);
-    my $cachef = $file;
-    $cachef =~ s!/!_!g;
-    my $abs_cachef = catfile($cached, $cachef) . ".$digest";
+    my $cache_file = $file;
+    $cache_file =~ s!/!_!g;
+    my $abs_cache_path = catfile($cache_dir, $cache_file) . ".$digest";
 
-    if (-f $abs_cachef && not $self->{_ignore_cache}) {
-        open my $cache_fh, '<', $abs_cachef
-            or die "Can't open $abs_cachef: $!";
+    if (-f $abs_cache_path && not $self->{_ignore_cache}) {
+        open my $cache_fh, '<', $abs_cache_path
+            or die "Can't open $abs_cache_path: $!";
         print $out_fh $_ while <$cache_fh>;
     } else {
         $parser->parse_from_file($file, $out_fh);
-        open my $cache_fh, '>', $abs_cachef
-            or die "Can't write formatted pod to $abs_cachef\n";
+        open my $cache_fh, '>', $abs_cache_path
+            or die "Can't write formatted pod to $abs_cache_path\n";
         seek $out_fh, 0, 0;
         print $cache_fh $_ while <$out_fh>;
     }
+}
+
+sub _cache_dir {
+    my $cache_dir = shift;
+    unless ($cache_dir) {
+        $cache_dir = catdir($ENV{HOME}, '.pod_perldoc_cache');
+    }
+    unless (-e $cache_dir) {
+        mkpath $cache_dir
+            or die "Can't create cache directory: $cache_dir";
+    }
+
+    return $cache_dir;
 }
 
 sub _pod_md5 {
