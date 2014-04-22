@@ -1,11 +1,11 @@
-package Helper;
+package t::Helper;
 
 use strict;
 use warnings;
 use File::Spec::Functions qw(catfile);
 use File::Temp qw(tempfile tempdir);
 use Digest::MD5 qw(md5_hex);
-use parent 'Exporter';
+use Exporter qw(import);
 
 our @EXPORT = qw(
     mk_podfile
