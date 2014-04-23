@@ -10,7 +10,7 @@ use constant DEFAULT_PARSER_CLASS => 'Pod::Text';
 
 our @ISA = ('Pod::Text');
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 sub parse_from_file {
     my ($self, $pod_file, $out_fh) = @_;
