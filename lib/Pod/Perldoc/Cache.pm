@@ -101,30 +101,34 @@ Pod::Perldoc::Cache - Caching perldoc output for quick reference
 
 =head1 SYNOPSIS
 
-    perldoc -MPod::Perldoc::Cache CGI
-    perldoc -MPod::Perldoc::Cache -w parser=Pod::Text::Color::Delight CGI
+    $ perldoc -MPod::Perldoc::Cache CGI
+    $ perldoc -MPod::Perldoc::Cache -w parser=Pod::Text::Color::Delight CGI
 
 =head1 DESCRIPTION
 
-Pod::Perldoc::Cache caches the formatted output from perldoc command and references it for the second time. Once the cache file is generated, perldoc command no more formats the pod file, but replies the cache content instantly.
+Pod::Perldoc::Cache caches the formatted output from perldoc command and references it for the next time. Once the cache file is generated, perldoc command no more formats the pod file, but replies the cache contents instantly. This module keeps track of the pod file contents so that the old cache is invalidated when the pod is updated.
 
-=head1 OPTIONS AND CONFIGURATION
+=head1 CONFIGURATION
+
+In default, Pod::Perldoc::Cache uses F<$HOME/.pod_perldoc_cache directory> for keeping cache files. By setting the environment variable B<POD_PERLDOC_CACHE_DIR>, you can select cache directory anywhere you want.
+
+=head1 COMMAND LINE OPTIONS
 
 =over 4
 
 =item -w parser=Parser::Module
 
-With "-w parser" option, you can specify the parser(formatter) module for perldoc which is used when the cache file doesn't exist.
+With "-w parser" command line option, you can specify the parser (formatter) module for perldoc which is used when the cache file doesn't exist.
 
 =item -w ignore
 
-If "-w ignore" option is given, the cache file is ignored and pod file is re-rendered.
+If "-w ignore" command line option is given, the cache file is ignored and the pod file is re-rendered.
 
 =back
 
 =head1 SEE ALSO
 
-L<Pod::Text>
+L<Pod::Text>,
 L<Pod::Text::Color::Delight>
 
 =head1 LICENSE
