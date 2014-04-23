@@ -39,8 +39,10 @@ sub mk_cache_dir {
 }
 
 sub get_cache_file_path {
-    my ($cachedir, $podfile) = @_;
-    return Pod::Perldoc::Cache::_cache_file($cachedir, $podfile);
+    my ($cachedir, $podfile, $parser_class) = @_;
+    return Pod::Perldoc::Cache::_cache_file(
+        $cachedir, $podfile, $parser_class
+    );
 }
 
 sub read_from_fh {
@@ -59,11 +61,11 @@ sub read_from_file {
 }
 
 sub prepare_all {
-    my $pod = shift;
+    my ($pod) = @_;
     my $cachedir = mk_cache_dir();
     my $podfile = mk_podfile($pod);
     my ($out_fh) = mk_outfile();
-    my $cachefile = get_cache_file_path($cachedir, $podfile);
+    my $cachefile = get_cache_file_path($cachedir, $podfile, 'Pod::Text');
 
     return ($podfile, $out_fh, $cachefile);
 }

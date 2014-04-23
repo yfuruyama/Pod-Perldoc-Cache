@@ -6,30 +6,33 @@ use File::Spec::Functions qw(catfile catdir);
 use File::Path qw(mkpath);
 use Digest::MD5 qw(md5_hex);
 use Pod::Text ();
+use constant DEFAULT_PARSER_CLASS => 'Pod::Text';
 
 our @ISA = ('Pod::Text');
 
 our $VERSION = "0.01";
 
 sub parse_from_file {
-    my ($self, $file, $out_fh) = @_;
-    my $parser = do {
-        if (exists $self->{_parser_module}) {
-            $self->{_parser_module}->new;
+    my ($self, $pod_file, $out_fh) = @_;
+    my $parser_class = do {
+        if (exists $self->{_parser_class}) {
+            $self->{_parser_class};
         } else {
-            Pod::Text->new;
+            DEFAULT_PARSER_CLASS;
         }
     };
 
     my $cache_dir = _cache_dir($ENV{POD_PERLDOC_CACHE_DIR});
-    my $cache_file = _cache_file($cache_dir, $file);
+    my $cache_file = _cache_file($cache_dir, $pod_file, $parser_class);
 
     if (-f $cache_file && not $self->{_ignore_cache}) {
         open my $cache_fh, '<', $cache_file
             or die "Can't open $cache_file: $!";
         print $out_fh $_ while <$cache_fh>;
     } else {
-        $parser->parse_from_file($file, $out_fh);
+        my $parser = $parser_class->new;
+        $parser->parse_from_file($pod_file, $out_fh);
+
         open my $cache_fh, '>', $cache_file
             or die "Can't write formatted pod to $cache_file\n";
         seek $out_fh, 0, 0;
@@ -38,11 +41,14 @@ sub parse_from_file {
 }
 
 sub _cache_file {
-    my ($cache_dir, $file) = @_;
-    my $digest = _pod_md5($file);
-    my $cache_file = $file;
-    $cache_file =~ s!/!_!g;
-    return catfile($cache_dir, $cache_file) . ".$digest";
+    my ($cache_dir, $file_path, $parser_class) = @_;
+
+    $parser_class =~ s/::/_/g;
+    my $digest = _calc_pod_md5($file_path);
+    my $suffix = ".$parser_class.$digest";
+
+    $file_path =~ s!/!_!g;
+    return catfile($cache_dir, $file_path) . $suffix;
 }
 
 sub _cache_dir {
@@ -58,7 +64,7 @@ sub _cache_dir {
     return $cache_dir;
 }
 
-sub _pod_md5 {
+sub _calc_pod_md5 {
     my $pod_file = shift;
     my $pod = do {
         local $/;
@@ -71,8 +77,9 @@ sub _pod_md5 {
 
 # called by -w option
 sub parser {
-    my ($self, $parser_module) = @_;
-    my $parser_file = $parser_module;
+    my ($self, $parser_class) = @_;
+
+    my $parser_file = $parser_class;
     $parser_file =~ s!\::!/!g;
     eval {
         require "$parser_file.pm";
@@ -80,7 +87,7 @@ sub parser {
     if ($@) {
         die $@;
     } else {
-        $self->{_parser_module} = $parser_module;
+        $self->{_parser_class} = $parser_class;
     }
 }
 
